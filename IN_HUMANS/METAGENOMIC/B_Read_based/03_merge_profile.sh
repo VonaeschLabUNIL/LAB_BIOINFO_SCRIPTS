@@ -20,12 +20,11 @@ module load miniconda3/22.11.1
 eval "$(conda shell.bash hook)"
 conda activate /work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/MetaPhlan/metaphlan
 
-cd /users/<USERS>/<Project_scratch>/data/Metaphlan
+cd /scratch/<USERS>/<Project_scratch>/data/Metaphlan
 mkdir MERGED
-
 
 merge_metaphlan_tables.py *_metaphlan4.txt > ./MERGED/PASTOBIOME_metaphlan_relab.txt
 merge_metaphlan_tables_abs.py *_metaphlan4.txt > ./MERGED/PASTOBIOME_metaphlan_abs.txt
 
 cd /users/syersin2/Pastobiome/data/Metaphlan/GTDB
-merge_metaphlan_tables.py --gtdb_profiles *_gtdb.txt > /users/<USERS>/<Project_scratch>/data/Metaphlan/MERGED/PASTOBIOME_metaphlan_gtdb.txt
+merge_metaphlan_tables.py --gtdb_profiles *_gtdb.txt > /scratch/<USERS>/<Project_scratch>/data/Metaphlan/MERGED/PASTOBIOME_metaphlan_gtdb.txt
