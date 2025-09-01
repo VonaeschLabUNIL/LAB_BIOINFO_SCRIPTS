@@ -1,19 +1,18 @@
 #!/bin/bash
 
 #SBATCH --job-name InStrain_profiling
-#SBATCH --output /scratch/syersin2/Satellite_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Satellite_scratch/std_output/%x_%j.err
-#SBATCH --mail-type BEGIN,END,FAIL,TIME_LIMIT_80
-#SBATCH --mail-user simon.yersin@unil.ch
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 36
 #SBATCH --mem 200G
 #SBATCH --time 06:00:00
-#SBATCH --array=1-3
+#SBATCH --array=1-XX
 
+# Run instrain profile
 
-#Load modules
+#Load modules - adapt
 module load gcc/11.4.0
 module load miniconda3/22.11.1
 
@@ -24,10 +23,10 @@ micromamba activate /work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/mcreze/INSTRA
 #InStrain profile takes as input a fasta file and a bam file (sorted and indexed!) and runs a series of steps to characterize the nucleotide diversity, SNSs and SNVs, linkage, etc..
 
 # Define directories
-indir=/scratch/syersin2/Satellite_scratch/transmission_dir/mapping_output
-refdir=/scratch/syersin2/Satellite_scratch/transmission_dir/tables/genomes_db
-filedir=/scratch/syersin2/Satellite_scratch/transmission_dir/tables
-outdir=/scratch/syersin2/Satellite_scratch/transmission_dir/instrain/instrain_profile
+indir=/scratch/<USERS>/<Project_scratch>/mapping_output
+refdir=/scratch/<USERS>/<Project_scratch>/tables/genomes_db
+filedir=/scratch/<USERS>/<Project_scratch>/tables
+outdir=/scratch/<USERS>/<Project_scratch>/instrain/instrain_profile
 
 # Change to input directory
 cd ${indir}
