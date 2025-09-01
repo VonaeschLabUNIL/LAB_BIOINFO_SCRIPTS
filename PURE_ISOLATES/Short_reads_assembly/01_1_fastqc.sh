@@ -2,21 +2,21 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name qc
-#SBATCH --output /scratch/syersin2/Satellite_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Satellite_scratch/std_output/%x_%j.err
+#SBATCH --output /scratch/<USER>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USER>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 8
 #SBATCH --time 00:15:00
 #SBATCH --array=1-9
 
-## Load modules
+## Load modules - adapt
 module load gcc/11.4.0
 module load fastqc/0.12.1
 
 # Variables
-indir=/scratch/syersin2/Satellite_scratch/Isolates/data
-outdir=/scratch/syersin2/Satellite_scratch/Isolates/QC
+indir=/scratch/<USER>/<Project_scratch>/data
+outdir=/scratch/<USER>/<Project_scratch>/QC
 
 # Array variables
 cd ${indir}
