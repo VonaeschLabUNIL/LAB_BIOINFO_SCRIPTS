@@ -2,8 +2,8 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name bowtie2
-#SBATCH --error /scratch/*USERS*/std_output/%x_%j.err
-#SBATCH --output /scratch/*USERS*/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 16
@@ -11,13 +11,16 @@
 #SBATCH --time 02:00:00
 #SBATCH --array=1-XX
 
+# Script to remove human host reads from metagenomic sequencing data using bowtie2 and human reference genome
+
+# Modules - adapt
 module load gcc/11.4.0
 module load bowtie2/2.5.1
 
-indir=/scratch/*USERS*/cleaned_reads
-outdir=/scratch/*USERS*/bw_cleaned_reads
-indexdir=/scratch/*USERS*/index
-logdir=/scratch/*USERS*/log
+indir=/scratch/<USERS>/<Project_scratch>/cleaned_reads
+outdir=/scratch/<USERS>/<Project_scratch>/bw_cleaned_reads
+indexdir=/scratch/<USERS>/<Project_scratch>/index
+logdir=/scratch/<USERS>/<Project_scratch>/log
 
 cd ${indir}
 sample=$(ls | sed -n ${SLURM_ARRAY_TASK_ID}p)
