@@ -29,8 +29,8 @@ sample_name=$(ls | sed -n ${SLURM_ARRAY_TASK_ID}p)
 
 
 ## Run contigs filtering
-python /users/<USER>/<Project_scratch>/scaffold_filter.py ${sample_name} scaffolds ${filter_indir}/${sample_name}/scaffolds.fasta ${filter_indir}/${sample_name}/ ISO
-python /users/<USER>/<Project_scratch>/scaffold_filter.py ${sample_name} contigs ${filter_indir}/${sample_name}/contigs.fasta ${filter_indir}/${sample_name}/ ISO
+python /users/<USER>/<Project>/scaffold_filter.py ${sample_name} scaffolds ${filter_indir}/${sample_name}/scaffolds.fasta ${filter_indir}/${sample_name}/ ISO
+python /users/<USER>/<Project>/scaffold_filter.py ${sample_name} contigs ${filter_indir}/${sample_name}/contigs.fasta ${filter_indir}/${sample_name}/ ISO
 
 ## Get assembly stats
 assembly-stats -l 200 -t <(cat ${filter_indir}/${sample_name}/${sample_name}.scaffolds.min200.fasta) > ${filter_indir}/${sample_name}/${sample_name}.min200.assembly.stats
