@@ -1,6 +1,9 @@
 ⚠️ READ ME! ⚠️
 
-For all scripts, the paths, module version, and number of samples need to be adapted.
+For all scripts the following needs to be adapted:
+           - paths
+           - modules version
+           - SBATCH parameters
 
 Steps for processing of sequencing data for: cleaning, read-based analysis and MAGs assembly.
 
