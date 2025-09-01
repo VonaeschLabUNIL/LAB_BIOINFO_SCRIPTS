@@ -11,6 +11,8 @@
 #SBATCH --time 01:00:00
 #SBATCH --array=1-XXX
 
+# Script to filter assemblies based on contigs size using python script scaffold_filter.py
+
 ## Load modules - adapt
 module load gcc/10.4.0
 module load python/3.7.10
