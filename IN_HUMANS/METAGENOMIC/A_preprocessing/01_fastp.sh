@@ -11,6 +11,8 @@
 #SBATCH --time 00:20:00
 #SBATCH --array=1-XX
 
+# Script to quality filter metagenomic sequencing data using fastP
+
 # Modules - adapt
 module load gcc/11.4.0
 module load fastp/0.23.4
