@@ -2,16 +2,16 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name integrity
-#SBATCH --output /scratch/syersin2/Satellite_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Satellite_scratch/std_output/%x_%j.err
+#SBATCH --output /scratch/<USER>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USER>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 8
 #SBATCH --time 00:05:00
-#SBATCH --array=1-9
+#SBATCH --array=1-XX
 
-indir=/scratch/syersin2/Satellite_scratch/Isolates/data
-outdir=/scratch/syersin2/Satellite_scratch/Isolates/integrity
+indir=/scratch/<USER>/<Project_scratch>/data
+outdir=/scratch/<USER>/<Project_scratch>/integrity
 
 cd ${indir}
 sample=$(ls | sed -n ${SLURM_ARRAY_TASK_ID}p)
