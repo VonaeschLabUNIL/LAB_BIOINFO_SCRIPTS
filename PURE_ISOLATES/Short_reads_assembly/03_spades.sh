@@ -2,23 +2,23 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name spades
-#SBATCH --output /scratch/syersin2/Satellite_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Satellite_scratch/std_output/%x_%j.err
+#SBATCH --output /scratch/<USER>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USER>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 16
 #SBATCH --mem 50G
 #SBATCH --time 01:00:00
-#SBATCH --array=1-9
+#SBATCH --array=1-XXX
 
-## Load modules
+## Load modules - adapt
 module load gcc/11.4.0
 module load spades/3.15.5
 module load python/3.10.13
 
 # Variables
-indir=/scratch/syersin2/Satellite_scratch/Isolates/cleaned_reads
-outdir=/scratch/syersin2/Satellite_scratch/Isolates/spades
+indir=/scratch/<USER>/<Project_scratch>/cleaned_reads
+outdir=/scratch/<USER>/<Project_scratch>/spades
 
 ## Array variables
 cd ${indir}
