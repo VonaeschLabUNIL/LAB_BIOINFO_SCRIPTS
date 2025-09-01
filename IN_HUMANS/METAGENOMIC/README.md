@@ -1,10 +1,13 @@
 READ ME!
 
-For all scripts, the paths and number of samples need to be adapted.
+For all scripts, the paths, module version, and number of samples need to be adapted.
 
 Steps for processing of sequencing data for: cleaning, read-based analysis and MAGs assembly.
+
            A. Pre-processing and cleaning: A_preprocessing
+           
            B. Read-based analysis (MetaPhlAn4 and HUMAnN3): B_Read_based
+           
            C. MAGs assembly: C_MAGs assembly
 
 
