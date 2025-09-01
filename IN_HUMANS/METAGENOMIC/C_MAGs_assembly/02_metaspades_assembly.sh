@@ -22,7 +22,6 @@ module load python/3.10.12
 spades_workdir=/scratch/<USERS>/<Project_scratch>
 spades_indir=/scratch/<USERS>/<Project_scratch>/data
 spades_outdir=/scratch/<USERS>/<Project_scratch>/output_data/metaspades
-keep_dir=/users/<USERS>/<Project_scratch>/output
 
 ## Array variables
 cd ${spades_indir}
@@ -45,11 +44,3 @@ rm -r ${spades_outdir}/${sample_name}/misc
 rm -r ${spades_outdir}/${sample_name}/K*
 rm -r ${spades_outdir}/${sample_name}/tmp
 
-# Copy important files to /users directory
-cp ${spades_outdir}/${sample_name}/assembly_graph.fastg ${keep_dir}/${sample_name}
-cp ${spades_outdir}/${sample_name}/contigs.fasta ${keep_dir}/${sample_name}
-cp ${spades_outdir}/${sample_name}/scaffolds.fasta ${keep_dir}/${sample_name}
-cp ${spades_outdir}/${sample_name}/spades.log ${keep_dir}/${sample_name}
-
-gzip ${keep_dir}/${sample_name}/*.fasta
-gzip ${keep_dir}/${sample_name}/*.fastg
