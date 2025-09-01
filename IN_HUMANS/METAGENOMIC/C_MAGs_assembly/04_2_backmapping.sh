@@ -2,26 +2,26 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name backmapping
-#SBATCH --output /scratch/syersin2/mags_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/mags_scratch/std_output/%x_%j.err
-#SBATCH --mail-type BEGIN,END,FAIL,TIME_LIMIT_80
-#SBATCH --mail-user simon.yersin@unil.ch
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 48
 #SBATCH --mem 250G
 #SBATCH --time 48:00:00
-#SBATCH --array=1-3
+#SBATCH --array=1-XXX
 
-## Load module
+# Script to align the metagenomic reads to the indexed scaffolds using bowtie2
+
+## Load module - adapt
 module load gcc/10.4.0
 module load bowtie2/2.4.2
 module load samtools/1.15.1
 
 ## Variables
-index_indir=/scratch/syersin2/mags_scratch/output_data/metaspades
-reads_indir=/scratch/syersin2/mags_scratch/data
-tmp=/scratch/syersin2/mags_scratch/tmp
+index_indir=/scratch/<USERS>/<Project_scratch>/output_data/metaspades
+reads_indir=/scratch/<USERS>/<Project_scratch>/data
+tmp=/scratch/<USERS>/<Project_scratch>/tmp
 
 ## Array variables
 cd ${index_indir}
