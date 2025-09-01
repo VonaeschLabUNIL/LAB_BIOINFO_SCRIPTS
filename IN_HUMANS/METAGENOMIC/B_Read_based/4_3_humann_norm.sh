@@ -2,18 +2,19 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name humann_norm
-#SBATCH --output /scratch/syersin2/Pastobiome_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Pastobiome_scratch/std_output/%x_%j.err
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 1
 #SBATCH --mem 2G
 #SBATCH --time 00:10:00
-#SBATCH --array=1-346
+#SBATCH --array=1-XXX
 
+# Script to normalize output tables from Humann3
 # Humann v.3.9
 
-# Module
+# Modules - adapt
 module load gcc/12.3.0
 module load miniforge3/4.8.3-4-Linux-x86_64
 
@@ -22,8 +23,8 @@ eval "$(conda shell.bash hook)"
 conda activate /work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/HUMANN/humann
 
 # Variables
-humann_workdir=/scratch/syersin2/Pastobiome_scratch/data/humann
-outdir=/scratch/syersin2/Pastobiome_scratch/data/humann_join_tables
+humann_workdir=/scratch/<USERS>/<Project_scratch>/data/humann
+outdir=/scratch/<USERS>/<Project_scratch>/data/humann_join_tables
 
 ## Array variables
 cd ${humann_workdir}
