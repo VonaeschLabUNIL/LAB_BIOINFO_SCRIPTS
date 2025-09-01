@@ -2,24 +2,22 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name bowtie2
-#SBATCH --error /scratch/syersin2/std_output/%x_%j.err
-#SBATCH --output /scratch/syersin2/std_output/%x_%j.out
-#SBATCH --mail-type BEGIN,END,FAIL,TIME_LIMIT_80
-#SBATCH --mail-user simon.yersin@unil.ch
+#SBATCH --error /scratch/*USERS*/std_output/%x_%j.err
+#SBATCH --output /scratch/*USERS*/std_output/%x_%j.out
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 16
 #SBATCH --mem 50G
 #SBATCH --time 02:00:00
-#SBATCH --array=1-346
+#SBATCH --array=1-XX
 
 module load gcc/11.4.0
 module load bowtie2/2.5.1
 
-indir=/scratch/syersin2/cleaned_reads
-outdir=/scratch/syersin2/bw_cleaned_reads
-indexdir=/scratch/syersin2/index
-logdir=/scratch/syersin2/log
+indir=/scratch/*USERS*/cleaned_reads
+outdir=/scratch/*USERS*/bw_cleaned_reads
+indexdir=/scratch/*USERS*/index
+logdir=/scratch/*USERS*/log
 
 cd ${indir}
 sample=$(ls | sed -n ${SLURM_ARRAY_TASK_ID}p)
