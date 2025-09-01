@@ -16,9 +16,11 @@ outdir=/scratch/*USERS*/integrity
 cd ${indir}
 sample=$(ls | sed -n ${SLURM_ARRAY_TASK_ID}p)
 
+# md5 check to verify all files integrity
 cd ${sample}
 md5sum -c *MD5*.txt > ${outdir}/intergrity_check_${sample}.txt
 
+# Merge forward and reverse files sequenced twice into two single files + rename into R1/2_001
 cat *_1.fq.gz > ${sample}_R1_001.fastq.gz
 cat *_2.fq.gz > ${sample}_R2_001.fastq.gz
 rm *_1.fq.gz
