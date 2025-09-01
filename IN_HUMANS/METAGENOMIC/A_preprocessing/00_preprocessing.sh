@@ -2,16 +2,16 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name integrity
-#SBATCH --error /scratch/*USERS*/std_output/%x_%j.err
-#SBATCH --output /scratch/*USERS*/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 8
 #SBATCH --time 00:05:00
 #SBATCH --array=1-XX
 
-indir=/scratch/*USERS*/RawData
-outdir=/scratch/*USERS*/integrity
+indir=/scratch/<USERS>/<Project_scratch>/RawData
+outdir=/scratch/<USERS>/<Project_scratch>/integrity
 
 cd ${indir}
 sample=$(ls | sed -n ${SLURM_ARRAY_TASK_ID}p)
