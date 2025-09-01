@@ -1,28 +1,27 @@
 #!/bin/bash
 
 #SBATCH --job-name map_reads
-#SBATCH --output /scratch/syersin2/Satellite_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Satellite_scratch/std_output/%x_%j.err
-#SBATCH --mail-type BEGIN,END,FAIL,TIME_LIMIT_80
-#SBATCH --mail-user simon.yersin@unil.ch
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 16
 #SBATCH --mem 20G
 #SBATCH --time 02:00:00
-#SBATCH --array=1-3
+#SBATCH --array=1-XX
 
+# Script to map reads onto index using bowtie2
 
-#Load modules
+#Load modules - adapt
 module load gcc/11.4.0
 module load bowtie2/2.5.1
 module load samtools/1.17
 
 # Variables
-indir=/scratch/syersin2/Satellite_scratch/transmission_dir/reads
-outdir=/scratch/syersin2/Satellite_scratch/transmission_dir/mapping_output
-index=/scratch/syersin2/Satellite_scratch/transmission_dir/tables/genomes_db/bt2_index
-tmp=/scratch/syersin2/Satellite_scratch/tmp
+indir=/scratch/<USERS>/<Project_scratch>/reads
+outdir=/scratch/<USERS>/<Project_scratch>/mapping_output
+index=/scratch/<USERS>/<Project_scratch>/tables/genomes_db/bt2_index
+tmp=/scratch/<USERS>/<Project_scratch>/tmp
 
 cd ${indir}
 # Define the array variables
