@@ -2,18 +2,19 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name humann
-#SBATCH --output /scratch/syersin2/Pastobiome_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Pastobiome_scratch/std_output/%x_%j.err
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 8
 #SBATCH --mem 40G
 #SBATCH --time 12:00:00
-#SBATCH --array=3,227
+#SBATCH --array=1-XXX
 
+# Script to profile the functional potential in metagenomic sequencing data using Humann3
 # Humann v.3.9
 
-# Module
+# Modules - adapt
 module load gcc/12.3.0
 module load miniforge3/4.8.3-4-Linux-x86_64
 
@@ -22,10 +23,10 @@ eval "$(conda shell.bash hook)"
 conda activate /work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/HUMANN/humann
 
 # Variables
-mpa_workdir=/users/syersin2/Pastobiome/data/Metaphlan
-humann_workdir=/scratch/syersin2/Pastobiome_scratch/data/humann
-datadir=/scratch/syersin2/Pastobiome_scratch/data/bw_cleaned_reads
-outdir=/scratch/syersin2/Pastobiome_scratch/data/humann_join_tables
+mpa_workdir=/users/<USERS>/<Project_scratch>/data/Metaphlan
+humann_workdir=/scratch/<USERS>/<Project_scratch>/data/humann
+datadir=/scratch/<USERS>/<Project_scratch>/data/bw_cleaned_reads
+outdir=/scratch/<USERS>/<Project_scratch>/data/humann_join_tables
 
 ## Array variables
 cd ${datadir}
