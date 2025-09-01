@@ -10,6 +10,8 @@
 #SBATCH --time 00:05:00
 #SBATCH --array=1-XX
 
+# Script t check intergrity of files and merge/rename files
+
 indir=/scratch/<USERS>/<Project_scratch>/RawData
 outdir=/scratch/<USERS>/<Project_scratch>/integrity
 
