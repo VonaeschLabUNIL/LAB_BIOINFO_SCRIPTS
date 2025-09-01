@@ -2,19 +2,18 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name humann_merge
-#SBATCH --output /scratch/syersin2/Pastobiome_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Pastobiome_scratch/std_output/%x_%j.err
-#SBATCH --mail-type BEGIN,END,FAIL,TIME_LIMIT_80
-#SBATCH --mail-user simon.yersin@unil.ch
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 2
 #SBATCH --mem 50G
 #SBATCH --time 08:00:00
 
+# Script to merge all individual output table from Humann3 into a single files (per database type)
 # Humann v.3.9
 
-# Module
+# Modules - adapt
 module load gcc/12.3.0
 module load miniforge3/4.8.3-4-Linux-x86_64
 
@@ -23,8 +22,8 @@ eval "$(conda shell.bash hook)"
 conda activate /work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/HUMANN/humann
 
 # Variables
-humann_dir=/scratch/syersin2/Pastobiome_scratch/data/humann
-outdir=/scratch/syersin2/Pastobiome_scratch/data/humann_join_tables
+humann_dir=/scratch/<USERS>/<Project_scratch>/data/humann
+outdir=/scratch/<USERS>/<Project_scratch>/data/humann_join_tables
 cd ${humann_dir}
 
 # pathcoverage
