@@ -8,18 +8,16 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name 06_Pairwise_phylogenetic_distances
-#SBATCH --output /scratch/mcreze/StrainPhlan_scratch/std_output/%x_%A_%j.out
-#SBATCH --error /scratch/mcreze/StrainPhlan_scratch/std_output/%x_%A_%j.err
-#SBATCH --mail-type BEGIN,END,FAIL,TIME_LIMIT_80
-#SBATCH --mail-user margaux.creze@unil.ch
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%A_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%A_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 4
 #SBATCH --mem 20G
 #SBATCH --time 00:10:00
-#SBATCH --array 1-697
+#SBATCH --array 1-XXX
 
-# Module
+# Module - adapt
 module load gcc/12.3.0
 module load python/3.8.18
 
@@ -27,8 +25,8 @@ module load python/3.8.18
 source /work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/PyPhlAn/venv/bin/activate
 
 ## Variables
-indir=/scratch/mcreze/StrainPhlan_scratch/StrainPhlan_output
-outdir=/scratch/mcreze/StrainPhlan_scratch/StrainPhlan_output/Phylo_dist
+indir=/scratch/<USERS>/<Project_scratch>/StrainPhlan_output
+outdir=/scratch/<USERS>/<Project_scratch>/StrainPhlan_output/Phylo_dist
 env=/work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/PyPhlAn
 
 mkdir -p ${outdir}
