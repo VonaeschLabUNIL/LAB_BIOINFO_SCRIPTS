@@ -22,7 +22,7 @@ eval "$(conda shell.bash hook)"
 conda activate /work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/MetaPhlan/metaphlan
 
 # Variables
-mpa_workdir=/users/<USERS>/<Project_scratch>/data/Metaphlan
+mpa_workdir=/scratch/<USERS>/<Project_scratch>/data/Metaphlan
 datadir=/scratch/<USERS>/<Project_scratch>/data/bw_cleaned_reads
 
 ## Array variables
