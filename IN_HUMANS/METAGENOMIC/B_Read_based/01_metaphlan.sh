@@ -11,7 +11,9 @@
 #SBATCH --time 00:45:00
 #SBATCH --array=1-XXX
 
-# Module - adapt
+# Script tp profile the taxonomy in metagenomic sequencing data using Metaphlan4
+
+# Modules - adapt
 module load gcc/11.4.0
 module load miniconda3/22.11.1
 
