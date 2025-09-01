@@ -2,16 +2,16 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name metaphlan
-#SBATCH --output /scratch/syersin2/Pastobiome_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Pastobiome_scratch/std_output/%x_%j.err
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 24
 #SBATCH --mem 50G
 #SBATCH --time 00:45:00
-#SBATCH --array=1-346
+#SBATCH --array=1-XXX
 
-# Module
+# Module - adapt
 module load gcc/11.4.0
 module load miniconda3/22.11.1
 
@@ -20,8 +20,8 @@ eval "$(conda shell.bash hook)"
 conda activate /work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/MetaPhlan/metaphlan
 
 # Variables
-mpa_workdir=/users/syersin2/Pastobiome/data/Metaphlan
-datadir=/scratch/syersin2/Pastobiome_scratch/data/bw_cleaned_reads
+mpa_workdir=/users/<USERS>/<Project_scratch>/data/Metaphlan
+datadir=/scratch/<USERS>/<Project_scratch>/data/bw_cleaned_reads
 
 ## Array variables
 cd ${datadir}
