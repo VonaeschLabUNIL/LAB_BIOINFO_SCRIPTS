@@ -2,25 +2,27 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name metaSPAdes
-#SBATCH --output /scratch/syersin2/mags_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/mags_scratch/std_output/%x_%j.err
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 40
 #SBATCH --mem 250G
 #SBATCH --time 24:00:00
-#SBATCH --array=1-3
+#SBATCH --array=1-XXX
 
-## Load modules
+# Script for assembly of MAGs using metaSPAdes
+
+## Load modules - adapt
 module load gcc/10.4.0
 module load spades/3.15.3
 module load python/3.10.12
 
 ## Variables
-spades_workdir=/scratch/syersin2/mags_scratch
-spades_indir=/scratch/syersin2/mags_scratch/data
-spades_outdir=/scratch/syersin2/mags_scratch/output_data/metaspades
-keep_dir=/users/syersin2/mags_test/output
+spades_workdir=/scratch/<USERS>/<Project_scratch>
+spades_indir=/scratch/<USERS>/<Project_scratch>/data
+spades_outdir=/scratch/<USERS>/<Project_scratch>/output_data/metaspades
+keep_dir=/users/<USERS>/<Project_scratch>/output
 
 ## Array variables
 cd ${spades_indir}
