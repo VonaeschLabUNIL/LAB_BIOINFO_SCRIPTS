@@ -2,21 +2,21 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name fastp
-#SBATCH --error /scratch/syersin2/std_output/%x_%j.err
-#SBATCH --output /scratch/syersin2/std_output/%x_%j.out
+#SBATCH --error /scratch/*USERS*/std_output/%x_%j.err
+#SBATCH --output /scratch/*USERS*/std_output/%x_%j.out
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 16
 #SBATCH --mem 8G
 #SBATCH --time 00:20:00
-#SBATCH --array=1-346
+#SBATCH --array=1-XX
 
 module load gcc/11.4.0
 module load fastp/0.23.4
 
-indir=/scratch/syersin2/RawData
-outdir=/scratch/syersin2/cleaned_reads
-reportdir=/scratch/syersin2/REPORTS_CLEANED_READS
+indir=/scratch/*USERS*/RawData
+outdir=/scratch/*USERS*/cleaned_reads
+reportdir=/scratch/*USERS*/REPORTS_CLEANED_READS
 
 cd ${indir}
 sample=$(ls | sed -n ${SLURM_ARRAY_TASK_ID}p)
