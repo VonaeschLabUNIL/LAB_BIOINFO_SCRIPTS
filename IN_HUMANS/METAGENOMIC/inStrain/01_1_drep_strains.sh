@@ -10,7 +10,7 @@
 #SBATCH --mem 8G
 #SBATCH --time 12:00:00
 
-# Script to dereplicate MAGs at the species level using dRep
+# Script to dereplicate MAGs at the strain level using dRep
 
 # Module - adapt
 module load gcc/11.4.0
