@@ -2,16 +2,18 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name metaphlan_gtdb
-#SBATCH --output /scratch/syersin2/Pastobiome_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Pastobiome_scratch/std_output/%x_%j.err\
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err\
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 4
 #SBATCH --mem 20G
 #SBATCH --time 00:15:00
-#SBATCH --array=1-346
+#SBATCH --array=1-XXX
 
-# Module
+# Script to obtain the taxonomy from Metaphlan4 as GTDB 
+
+# Modules - adapt
 module load gcc/11.4.0
 module load miniconda3/22.11.1
 
