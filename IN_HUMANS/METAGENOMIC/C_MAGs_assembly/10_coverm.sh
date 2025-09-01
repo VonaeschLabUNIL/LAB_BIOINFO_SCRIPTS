@@ -2,18 +2,18 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name coverm
-#SBATCH --output /scratch/syersin2/Satellite_scratch/mags_output/coverm/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Satellite_scratch/mags_output/coverm/std_output/%x_%j.err
-#SBATCH --mail-type BEGIN,END,FAIL,TIME_LIMIT_80
-#SBATCH --mail-user simon.yersin@unil.ch
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 16
 #SBATCH --mem 50G
 #SBATCH --time 02:00:00
-#SBATCH --array=1
+#SBATCH --array=1-XXX
 
-# Module
+# Optional: script to compute the abundance of the MAGs in the samples using coverM
+
+# Module - adpat
 module load gcc/12.3.0
 module load miniforge3/4.8.3-4-Linux-x86_64
 
@@ -22,10 +22,10 @@ eval "$(conda shell.bash hook)"
 conda activate /work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/CoverM/coverm
 
 # Variables
-genome_dir=/scratch/syersin2/Satellite_scratch/mags_output/MAGs
-reads_dir=/scratch/syersin2/Satellite_scratch/Cleaned_reads
-outdir=/scratch/syersin2/Satellite_scratch/mags_output/coverm/coverm_out
-TMPDIR=/scratch/syersin2/Satellite_scratch/mags_output/coverm/tmp
+genome_dir=/scratch/<USERS>/<Project_scratch>/mags_output/MAGs
+reads_dir=/scratch/<USERS>/<Project_scratch>/Cleaned_reads
+outdir=/scratch/<USERS>/<Project_scratch>/mags_output/coverm/coverm_out
+TMPDIR=/scratch/<USERS>/<Project_scratch>/mags_output/coverm/tmp
 
 ## Array variables
 cd ${reads_dir}
