@@ -11,11 +11,12 @@ Steps for processing of sequencing data for: cleaning, read-based analysis and M
            
            C. MAGs assembly: C_MAGs assembly
 
+Strain-level profiling in metagenomic sequencing data:
 
-Other scripts
+           inStrain
+           
+           StrainPhlAn
+
 Taxonmic annotation using mOTUs profiler, go to MOTUS folder
 
-Taxonomic annotation using MetaPhlAn4, go to METAPHLAN folder
-
-Functional annotation using the BioBakery, go to METAPHLAN folder
            
