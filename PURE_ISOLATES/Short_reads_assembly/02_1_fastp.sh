@@ -2,23 +2,23 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name fastp
-#SBATCH --output /scratch/syersin2/Satellite_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Satellite_scratch/std_output/%x_%j.err
+#SBATCH --output /scratch/<USER>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USER>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 16
 #SBATCH --mem 8G
 #SBATCH --time 00:20:00
-#SBATCH --array=1-9
+#SBATCH --array=1-XXX
 
-#Modules
+# Modules - adapt
 module load gcc/11.4.0
 module load fastp/0.23.4
 
 #Variables
-indir=/scratch/syersin2/Satellite_scratch/Isolates/data
-outdir=/scratch/syersin2/Satellite_scratch/Isolates/cleaned_reads
-reportdir=/scratch/syersin2/Satellite_scratch/Isolates/REPORTS_CLEANED_READS
+indir=/scratch/<USER>/<Project_scratch>/data
+outdir=/scratch/<USER>/<Project_scratch>/cleaned_reads
+reportdir=/scratch/<USER>/<Project_scratch>/REPORTS_CLEANED_READS
 
 # Array variables
 cd ${indir}
