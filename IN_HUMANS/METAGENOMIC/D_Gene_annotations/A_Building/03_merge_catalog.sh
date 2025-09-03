@@ -18,12 +18,12 @@ mkdir -p ${outdir}
 
 for f in ${indir}/*.fna; do
      awk 'BEGIN{RS=">"; ORS=""} NR>1{print ">"$0"\n"}' "$f"
-done > ${outdir}/Afribiota_gene_catalog_all.fna
+done > ${outdir}/Gene_catalog_all.fna
 
-gzip ${outdir}/Afribiota_gene_catalog_all.fna
+gzip ${outdir}/Gene_catalog_all.fna
 
 for f in ${indir}/*.faa; do
      awk 'BEGIN{RS=">"; ORS=""} NR>1{print ">"$0"\n"}' "$f"
-done > ${outdir}/Afribiota_gene_catalog_all.faa
+done > ${outdir}/Gene_catalog_all.faa
 
-gzip ${outdir}/Afribiota_gene_catalog_all.faa
+gzip ${outdir}/Gene_catalog_all.faa
