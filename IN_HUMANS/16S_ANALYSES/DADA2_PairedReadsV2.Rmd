@@ -1,6 +1,6 @@
 ---
-title: "DADA2 16S rRNA sequences Satellite project"
-author: "Simon Yersin"
+title: "DADA2 16S rRNA sequences"
+author: "Vonaesch Lab"
 date: '2022-03-08'
 output: pdf_document
 ---
