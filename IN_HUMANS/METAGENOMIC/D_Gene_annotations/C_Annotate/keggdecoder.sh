@@ -2,8 +2,8 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name keggdecoder
-#SBATCH --output /scratch/syersin2/Afribiota_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Afribiota_scratch/std_output/%x_%j.err
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 1
@@ -19,12 +19,12 @@ eval "$(conda shell.bash hook)"
 conda activate /work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/KEGGDecoder/keggdecoder
 
 ## Variables
-indir=/scratch/syersin2/Afribiota_scratch/annotations/kofamscan
-outdir=/scratch/syersin2/Afribiota_scratch/annotations/kofamscan/keggdecoder
+indir=/scratch/<USERS>/<Project_scratch>/annotations/kofamscan
+outdir=/scratch/<USERS>/<Project_scratch>/annotations/kofamscan/keggdecoder
 
 rm -r ${outdir}
 mkdir -p ${outdir}
 
-KEGG-decoder -i ${indir}/Afribiota_kofamscan_merged.txt \
+KEGG-decoder -i ${indir}/kofamscan_merged.txt \
     -o ${outdir}/FUNCTION_OUT.list \
     -v static
