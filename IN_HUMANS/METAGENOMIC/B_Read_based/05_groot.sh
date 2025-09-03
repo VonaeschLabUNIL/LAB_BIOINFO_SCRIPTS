@@ -2,16 +2,18 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name groot
-#SBATCH --output /scratch/amuhumme/MV_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/amuhumme/MV_scratch/std_output/%x_%j.err
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 8
 #SBATCH --mem 4G
 #SBATCH --time 01:00:00
-#SBATCH --array=1-4
+#SBATCH --array=1-XX
 
-# Module
+# Script to profile the resistance in the reads
+
+# Module - adapt
 module load gcc/12.3.0
 module load miniforge3/4.8.3-4-Linux-x86_64
 
@@ -21,11 +23,11 @@ conda activate /work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/GROOT/groo
 # Groot directory includes: bbmap and biopython
 
 # Variables
-datadir=/scratch/amuhumme/MV_scratch/pastobiome_scratch
-filt_reads=/scratch/amuhumme/MV_scratch/filter
-outdir=/scratch/amuhumme/MV_scratch/groot_out
+datadir=/scratch/<USERS>/<Project_scratch>
+filt_reads=/scratch/<USERS>/<Project_scratch>/filter
+outdir=/scratch/<USERS>/<Project_scratch>/groot_out
 index_dir=/work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/GROOT/databases/groot-db.90.index
-pydir=/scratch/amuhumme/MV_scratch
+pydir=/scratch/<USERS>/<Project_scratch>
 
 ## Array variables
 cd ${datadir}
