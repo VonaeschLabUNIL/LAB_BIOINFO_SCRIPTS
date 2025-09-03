@@ -2,22 +2,22 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name prodigal_mags2
-#SBATCH --output /scratch/syersin2/Afribiota_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Afribiota_scratch/std_output/%x_%j.err
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 1
 #SBATCH --mem 1G
 #SBATCH --time 00:10:00
-#SBATCH --array=1-57
+#SBATCH --array=1-XX
 
-# Module
+# Modules - adapt
 module load gcc/12.3.0
 module load prodigal/2.6.3
 
 ## Variables
-indir=/scratch/syersin2/Afribiota_scratch/MAGs
-outdir=/scratch/syersin2/Afribiota_scratch/prodigal
+indir=/scratch/<USERS>/<Project_scratch>/MAGs
+outdir=/scratch/<USERS>/<Project_scratch>/prodigal
 
 sample=$(ls ${indir} | sed -n ${SLURM_ARRAY_TASK_ID}p)
 
