@@ -1,0 +1,345 @@
+---
+title: "DADA2 16S rRNA sequences Satellite project"
+author: "Simon Yersin"
+date: '2022-03-08'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Starting point
+```{r}
+#Our starting point is a set of Illumina-sequenced paired-end fastq files that have been split (or “demultiplexed”) by sample and from which the barcodes/adapters have already been removed
+#The end product is an amplicon sequence variant (ASV) table, a higher-resolution analogue of the traditional OTU table, which records the number of times each exact amplicon sequence variant was observed in each sample
+#We also assign taxonomy to the output sequences, and demonstrate how the data can be imported into the popular phyloseq R package for the analysis of microbiome data
+
+#This workflow assumes that your sequencing data meets certain criteria:
+##Samples have been demultiplexed, i.e. split into individual per-sample fastq files.
+##Non-biological nucleotides have been removed, e.g. primers, adapters, linkers, etc.
+##If paired-end sequencing data, the forward and reverse fastq files contain reads in matched order.
+
+## IF single library, remove the reverese read and do not have to merge
+
+#https://benjjneb.github.io/dada2/tutorial.html
+```
+# Loading libraries
+```{r}
+library(dada2)
+library(ggplot2)
+```
+
+# Working directory and path
+```{r}
+#Set theme for ggplots
+theme_set(theme_bw())
+
+# Set your working directory
+# First check which wd you are working in with:
+getwd()
+# Copy and paste path in the following to set your working directory:
+setwd("/Users/admin/Documents/PATH_TO_PROJECT")
+
+# Save path to fastq file folder after unzipping
+path <- "/Users/admin/Documents/PATH_TO_FASTQ_FILES"
+# Control files
+list.files(path)
+```
+
+# Upload files
+```{r}
+# Check for specific name in fastq for forward and reverse read
+# Example fnFs: R1_001.fastq.gz fnRs: R2_001.fastq.gz
+fnFs <- sort(list.files(path, pattern="_L001_R1_001.fastq.gz", full.names = TRUE))
+fnRs <- sort(list.files(path, pattern="_L001_R2_001.fastq.gz", full.names = TRUE))
+
+# Extract sample names
+# See files for pattern, ex from AFRIBIOTA fastq: _L001
+sample.namesF<- sapply(strsplit(basename(fnFs), "_L001_R1_001"), `[`, 1)
+sample.namesR <- sapply(strsplit(basename(fnRs), "_L001_R2_001"), `[`, 1)
+
+#Verify if same number of forward and reverse:
+length(fnFs) #146
+length(fnRs) #146
+intersect <- intersect(sample.namesF, sample.namesR)
+sample.namesR [! sample.namesR %in% sample.namesF] # these are in the reverse but not in the forward --> NONE
+sample.namesF [! sample.namesF %in% sample.namesR] # these are in the forward but not in the reverse --> NONE
+```
+
+# Quality plots
+```{r}
+# plot quality profiles of the forward and reverse reads 
+plotQualityProfile(fnFs[1:4]) 
+# Forward reads length:
+# quality decrease only at the last few bp
+# # Drop at the beginning for the first 5 bp
+plotQualityProfile(fnRs[1:4])
+# Reverse reads length:
+# Quality decrease around:
+# Drop at the beginning for the first:
+
+
+```
+
+# Filter and trim
+```{r}
+#Place filter files in filtered subdirectory
+filtFs <- file.path(path, "dada2_filtered", paste0(sample.namesF, "_F_filt.fastq.gz"))
+filtRs <- file.path(path, "dada2_filtered", paste0(sample.namesR, "_R_filt.fastq.gz"))
+
+names(filtFs) <- sample.namesF
+names(filtRs) <- sample.namesR
+
+# Check parameters
+# the more aggressive you are with truncation, the more reads will be retained,
+# but you still need to merge, so consider how much read overlap remains after truncation
+# Might have to remove verbose and MatchIDs
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, 
+                     truncLen=c(240,220), 
+                     maxN=0, maxEE=c(6,8), truncQ=c(2,2),
+                     rm.phix=TRUE, verbose=TRUE, matchIDs=TRUE,
+                     compress=TRUE, multithread=TRUE) 
+# Check retained reads
+retained <- as.data.frame(out)
+retained$percentage_retained <- retained$reads.out/retained$reads.in*100
+View(retained)
+
+# Or check quality profile again
+plotQualityProfile(filtFs[1:4])
+plotQualityProfile(filtRs[1:4])
+```
+
+# Error rate
+```{r}
+#Learn error rates
+errF <- learnErrors(filtFs, multithread=TRUE)
+errR <- learnErrors(filtRs, multithread=TRUE)
+
+#Plot error
+plotErrors(errF, nominalQ=TRUE)
+```
+
+# Dereplication
+```{r}
+derepFs <- derepFastq(filtFs, verbose=TRUE)
+derepRs <- derepFastq(filtRs, verbose=TRUE)
+
+# Name the derep-class objects by the sample names
+names(derepFs) <- sample.namesF
+names(derepRs) <- sample.namesR
+```
+
+# Sample inference
+```{r}
+#DADA2 infers sample sequences exactly and resolves differences of as little as 1 nucleotide
+
+dadaFs <- dada(derepFs, err=errF, multithread=TRUE)
+dadaRs <- dada(derepRs, err=errR, multithread=TRUE)
+
+#Inspecting the returned dada-class object:
+dadaFs[[1]]
+dadaRs[[1]]
+
+```
+
+#Remove low-sequence sample
+```{r}
+# Example of simple method used above after the filter and trim step. if you already did this but still got an error when merging, try the steps below
+# samples_to_keep <- as.numeric(out[,"reads.out"]) > 100
+
+# Keeping track of read retention, number of unique sequences after ASV inference
+getN <- function(x) sum(getUniques(x)) #keeping track of read retention, number of unique sequences after ASV inference
+track <- cbind(sapply(derepFs, getN), sapply(derepRs, getN), sapply(dadaFs, getN), sapply(dadaRs, getN))
+samples_to_keep <- track[,4] > 100 #your threshold. try different ones to get the lowest one that will work. #this method accounts for dereplication/ASVs left after inference
+```
+
+# Merging
+```{r}
+# Merge forward and reverse reads to obtain the full denoised sequences
+# Skip this step if using fastq with only forward reads
+mergers <- mergePairs(dadaFs[samples_to_keep], 
+                      derepFs[samples_to_keep], 
+                      dadaRs[samples_to_keep], 
+                      derepRs[samples_to_keep], verbose=TRUE)
+
+
+# The mergers object is a list of data.frames from each sample. 
+# Each data.frame contains the merged $sequence, its $abundance, and the indices of the $forward and $reverse sequence variants that were merged. 
+
+# Inspect the merger data.frame from the first sample
+head(mergers[[1]])
+```
+
+# Construct sequence table
+```{r}
+seqtab <- makeSequenceTable(mergers)
+
+#Check table dimension
+dim(seqtab)
+
+#Inspect districution of sequence lengths
+table(nchar(getSequences(seqtab)))
+
+#View Sequence Length Distribution Post-Merging
+#most useful with merged data. this plot will not show you much for forward reads only, which should have a uniform length distribution.
+length.histogram <- as.data.frame(table(nchar(getSequences(seqtab)))) #tabulate sequence length distribution
+plot(x=length.histogram[,1], y=length.histogram[,2]) #view length distribution plot
+
+## If different datasets (fastq files from different studies) are used, 
+# the above pipeline need to be done for each dataset separatly
+# Then the seqtab can be merged with: 
+#seqtab <- mergeSequenceTables(seqtab_1, seqtab_2, seqtab_3)
+
+# then the rest of the pipeline can be done on the merged seqtab
+```
+
+# Sequence table
+```{r}
+# Optional step
+library(phyloseq)
+# Create phyloseq otu_table / asv_table
+otus <- otu_table(t(seqtab), taxa_are_rows = TRUE)
+
+# Some metrics from the sequence table
+otu_pres_abs <- otus
+  # Creating a presence/absence table
+otu_pres_abs[otu_pres_abs >= 1] <- 1 
+  # Counts of sample per ASV
+otu_pres_abs_rowsums <- rowSums(otu_pres_abs) 
+  # How many ASVs
+length(otu_pres_abs_rowsums) 
+  # How many ASVs only present in one sample
+length(which(otu_pres_abs_rowsums == 1))
+
+#what are the counts of each ASV
+  # Raw counts per ASV
+otu_rowsums <- rowSums(otus) 
+  # Raw read counts in ASVs only presesnt in one sample
+otu_singleton_rowsums <- as.data.frame(otu_rowsums[which(otu_pres_abs_rowsums == 1)]) 
+  # Histogram plot of above
+hist(otu_singleton_rowsums[,1], breaks=500, xlim = c(0,200), xlab="# Reads in ASV")
+  # How many are there with N reads or fewer?
+length(which(otu_singleton_rowsums <= 50)) 
+```
+Comment: the removal low-read-count singleton ASVs step was deleted from this pipeline
+# Remove chimeras
+```{r}
+# Here we remove "bimeras" or chimeras with two sources
+# look at "method" to decide which type of pooling you'd like to use when judging each sequence as chimeric or non-chimeric
+# Possible methods: "consensus" ; "pooled"
+#this step can take a few minutes to a few hours, depending on the size of your datas
+seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE) 
+
+dim(seqtab.nochim)
+sum(seqtab.nochim)/sum(seqtab) 
+# Proportion of nonchimeras 
+#it should be relatively high after filtering out your singletons/low-count ASVs, even if you lose a lot of ASVs
+# the number of reads lost should be quite low
+```
+
+# Track reads
+```{r}
+# Look at the number of reads that made it through each step in the pipeline
+getN <- function(x) sum(getUniques(x))
+
+# IF ran the optional, run the following:
+track <- cbind(out[samples_to_keep,], 
+               sapply(dadaFs[samples_to_keep], getN), 
+               sapply(dadaRs[samples_to_keep], getN), 
+               sapply(mergers, getN),
+               rowSums(seqtab.nochim))
+
+
+# If processing only a single sample, remove the sapply calls: e.g. replace sapply(dadaFs, getN) with getN(dadaFs)
+
+# Adding percent_chimeras in track
+track <- cbind(track, round(100-track[,6]/track[,5]*100,2))
+colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged",
+                     "nochimeras","percent_chimeras")
+
+
+rownames(track) <- sample.namesF[samples_to_keep]
+
+# Save output from sequence table construction steps
+# Read retention table
+write.table(track, "Tables/read_retention_table_PROJECT_NAME.txt", quote=F, row.names=T, col.names=T, sep="\t")
+
+```
+
+# Assign taxonomy
+```{r}
+# Note: time consuming if you have a large dataset
+  # Saving the sequences as a fasta file (with writeFasta) and using QIIME's taxonomy assignment command will save you time
+  # Slightly less accurate than the dada2 package's taxonomy assignment function.
+# Using the Silva database
+
+# Silva database: https://benjjneb.github.io/dada2/training.html
+# download the silva_nr99_v138.1_train_set.fa.gz
+# Or the train set with Species: silva_nr99_v138.1_wSpecies_train_set.fa.gz
+# Or latest version of the database
+taxa <- assignTaxonomy(seqtab.nochim, "Tables/silva_nr99_v138.1_wSpecies_train_set.fa.gz", multithread=TRUE)
+
+# Optional: The dada2 package also implements a method to make species level assignments based on exact matching between ASVs and sequenced reference strains. Recent analysis suggests that exact matching (or 100% identity) is the only appropriate way to assign species to 16S gene fragments. Currently, species-assignment training fastas are available for the Silva and RDP 16S databases. To follow the optional species addition step, download the silva_species_assignment_v132.fa.gz file, and place it in the directory with the fastq files. Using: taxa <- addSpecies(taxa, "~/tax/silva_species_assignment_v132.fa.gz")
+
+# NA taxa are hard to separate later if they have no label; apply "Unassigned" label here now
+# Possible labels here: eukaryotic, archaeal, bacterial, and "NA" taxa
+unique(taxa[,1])  
+#test for NA
+NAs <- is.na(taxa[,1]) 
+# Get indices of NA values
+NAs <- which(NAs == TRUE) 
+# Apply new label to identified indices
+taxa[NAs,1] <- "Unassigned" 
+
+#colnames(taxa) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+# Or other possible col names:
+#colnames(taxa) <- c("Rank1", "Rank2", "Rank3", "Rank4", "Rank5", "Rank6", "Rank7", "Accession")
+
+#head(taxa)
+```
+
+# correspondance between taxonomic table and otu table
+```{r}
+#Add column with ASV# for each sequence, and column with sequences from the row names
+taxa <- taxa %>%
+  as.data.frame() %>%
+  mutate(ASV = paste("ASV", seq(1:nrow(taxa)), sep="")) %>%
+  mutate(SEQ = rownames(taxa))
+
+# Assign row names as ASV number
+row.names(taxa) <- taxa$ASV
+
+# Check for duplicate in ASV names
+which(duplicated(row.names(taxa))==TRUE)
+
+# Return integrer =(0) there are no duplicates in term of all variables
+# Correspondence dataframe contain first two column of tax : ASV : SEQ
+correspondence <-taxa[,c("ASV","SEQ")]
+
+# Change tax as matrix, remove ASV and SEQ columns
+taxa = as.matrix(taxa)
+taxa <- taxa[,-c(8:9)]
+
+# Save taxonomy table
+write.table(taxa, "Tables/taxonomy_table_PROJECT_NAME.txt", sep="\t", quote=F, row.names=T, col.names=T)
+
+# Transposition of OTU (matrix class) 
+otu <- t(seqtab.nochim)
+
+# Bind together otu and correspondence 
+otu <- cbind(correspondence, otu)
+
+# Assign row names as ASV instead of sequences, then remove columns 1 and 2 containing sequences
+which(rownames(otu) != otu$SEQ)
+row.names(otu)<-otu$ASV
+otu <- otu[,-(1:2) ]
+
+# Class matrix and numerical values
+otu <- as.matrix(otu)
+class(otu) <- "numeric"
+
+# Save sequence table
+write.table(otu, "Tables/abundance_table_PROJECT_NAME.txt", sep="\t", quote=F, row.names=T, col.names=T)
+
+### Good job you made it ###
+```
