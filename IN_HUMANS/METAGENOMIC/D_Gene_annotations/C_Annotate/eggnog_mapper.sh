@@ -2,8 +2,8 @@
 
 #SBATCH --partition cpu
 #SBATCH --job-name 2eggnog
-#SBATCH --output /scratch/syersin2/Afribiota_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Afribiota_scratch/std_output/%x_%j.err
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --nodes 1
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 16
@@ -20,11 +20,11 @@ eval "$(conda shell.bash hook)"
 conda activate /work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/EGGNog/eggnog
 
 ## Variables
-indir=/scratch/syersin2/Afribiota_scratch/catalogue/derepcat/split_cat/Afribiota_gene_catalog_derep.faa.split
-outdir=/scratch/syersin2/Afribiota_scratch/annotations/eggnog
+indir=/scratch/<USERS>/<Project_scratch>/catalogue/derepcat/split_cat/Afribiota_gene_catalog_derep.faa.split
+outdir=/scratch/<USERS>/<Project_scratch>/annotations/eggnog
 datadir=/work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/EGGNog/database
-tmpdir=/scratch/syersin2/Afribiota_scratch/tmp/eggnog
-scratchdir=/scratch/syersin2/Afribiota_scratch/annotations/eggnog_scratch
+tmpdir=/scratch/<USERS>/<Project_scratch>/tmp/eggnog
+scratchdir=/scratch/<USERS>/<Project_scratch>/annotations/eggnog_scratch
 
 # catalogue part
 parts=$(ls ${indir} | sed -n ${SLURM_ARRAY_TASK_ID}p | sed 's/\.faa$//')
