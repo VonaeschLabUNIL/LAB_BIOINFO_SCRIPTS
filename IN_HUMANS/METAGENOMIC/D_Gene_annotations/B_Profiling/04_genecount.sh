@@ -1,14 +1,14 @@
 #!/bin/bash
 #SBATCH --job-name=genecount
-#SBATCH --output /scratch/syersin2/Afribiota_scratch/std_output/%x_%j.out
-#SBATCH --error /scratch/syersin2/Afribiota_scratch/std_output/%x_%j.err
+#SBATCH --output /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.out
+#SBATCH --error /scratch/<USERS>/<Project_scratch>/std_output/%x_%j.err
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=100G
 #SBATCH --time=03:00:00
-#SBATCH --array=17
+#SBATCH --array=1-XX
 
-# Load necessary modules
+# Load necessary modules - adapt
 module load gcc/12.3.0
 module load seqkit/0.10.1
 module load miniforge3/4.8.3-4-Linux-x86_64
@@ -18,10 +18,10 @@ eval "$(conda shell.bash hook)"
 conda activate /work/FAC/FBM/DMF/pvonaesc/vonasch_lab_general/syersin/SushiCounter/counter
 
 ## Variables
-indir=/scratch/syersin2/Afribiota_scratch/catalogue/alignment
-outdir=/scratch/syersin2/Afribiota_scratch/catalogue/profiles
-fqdir=/scratch/syersin2/Afribiota_scratch/bw_cleaned_reads 
-logdir=/scratch/syersin2/Afribiota_scratch/catalogue/log
+indir=/scratch/<USERS>/<Project_scratch>/catalogue/alignment
+outdir=/scratch/<USERS>/<Project_scratch>/catalogue/profiles
+fqdir=/scratch/<USERS>/<Project_scratch>/bw_cleaned_reads 
+logdir=/scratch/<USERS>/<Project_scratch>/catalogue/log
 
 ## Array variables
 sample=$(ls ${indir} | sed -n ${SLURM_ARRAY_TASK_ID}p)
