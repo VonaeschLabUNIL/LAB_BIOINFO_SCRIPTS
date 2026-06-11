@@ -1,0 +1,394 @@
+---
+title: "DADA2 pipeline — 16S amplicon (HiSeq, MiSeq)"
+author: "Simon Yersin"
+date: '2026-06-09'
+output: pdf_document
+---
+
+IMPORTANT NOTE: This pipeline is for DNA sequenced on MiSeq or HiSeq Illumina sequencing systems! 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Starting point ---
+
+Our starting point is a set of Illumina-sequenced paired-end fastq files that have been split (or “demultiplexed”) by sample and from which the barcodes/adapters have already been removed
+The end product is an amplicon sequence variant (ASV) table, a higher-resolution analogue of the traditional OTU table, which records the number of times each exact amplicon sequence variant was observed in each sample
+We also assign taxonomy to the output sequences
+
+This workflow assumes that your sequencing data meets certain criteria:
+DNA sequenced on MiSeq or HiSeq Illumina sequencing systems.
+Samples have been demultiplexed, i.e. split into individual per-sample fastq files.
+Non-biological nucleotides have been removed, e.g. primers, adapters, linkers, etc.
+If paired-end sequencing data, the forward and reverse fastq files contain reads in matched order.
+
+IF single library, remove the reverese read and do not have to merge
+
+Tutorial:
+https://benjjneb.github.io/dada2/tutorial.html
+
+Note: 
+If multiple batches are processed together with DADA2, the following steps must be performed separately per batch: upload files, filter and trim, learn error rate, dereplication, sample inference, merging and construct sequence table.
+Once a sequence table is constructed for each batch, they can be merged and the following steps can be done in common: remove chimeras and assign taxonomy.
+IMPORTANT: all batches have to have the same region amplified! 
+
+# Loading libraries
+```{r library}
+library(dada2)
+library(ggplot2)
+library(dplyr)
+```
+
+# Working directory and path
+```{r set_path}
+#Set theme for ggplots
+theme_set(theme_bw())
+
+# Set your working directory
+# First check which wd you are working in with:
+getwd()
+# Copy and paste path in the following to set your working directory:
+setwd("/Users/admin/Documents/PATH_TO_PROJECT")
+
+# Save path to fastq file folder after unzipping
+path <- "/Users/admin/Documents/PATH_TO_FASTQ_FILES"
+# Control files
+list.files(path)
+```
+
+# Upload files
+```{r load_files}
+# Check for specific name in fastq for forward and reverse read
+# Example fnFs: R1_001.fastq.gz fnRs: R2_001.fastq.gz
+fnFs <- sort(list.files(path, pattern="_L001_R1_001.fastq.gz", full.names = TRUE))
+fnRs <- sort(list.files(path, pattern="_L001_R2_001.fastq.gz", full.names = TRUE))
+
+# Extract sample names
+# See files for pattern, ex from AFRIBIOTA fastq: _L001
+sample.namesF<- sapply(strsplit(basename(fnFs), "_L001_R1_001"), `[`, 1)
+sample.namesR <- sapply(strsplit(basename(fnRs), "_L001_R2_001"), `[`, 1)
+
+#Verify if same number of forward and reverse:
+length(fnFs) #146
+length(fnRs) #146
+intersect <- intersect(sample.namesF, sample.namesR)
+sample.namesR [! sample.namesR %in% sample.namesF] # these are in the reverse but not in the forward --> NONE
+sample.namesF [! sample.namesF %in% sample.namesR] # these are in the forward but not in the reverse --> NONE
+```
+
+# Quality plots
+```{r quality_profiles}
+# plot quality profiles of the forward and reverse reads 
+plotQualityProfile(fnFs[1:4]) 
+plotQualityProfile(fnRs[1:4])
+# Allow to assess were the quality drops on the forward and reverse reads. These positions inform the settings of truncLen in filterAndTrim().
+```
+
+# Filter and trim
+```{r filter_and_trim}
+#Place filter files in filtered subdirectory
+filtFs <- file.path(path, "dada2_filtered", paste0(sample.namesF, "_F_filt.fastq.gz"))
+filtRs <- file.path(path, "dada2_filtered", paste0(sample.namesR, "_R_filt.fastq.gz"))
+
+names(filtFs) <- sample.namesF
+names(filtRs) <- sample.namesR
+
+# Check parameters
+# the more aggressive you are with truncation, the more reads will be retained,
+# but you still need to merge, so consider how much read overlap remains after truncation
+# Might have to remove verbose and MatchIDs
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, 
+                     truncLen=c(240,220), 
+                     maxN=0, truncQ=c(2,2), maxEE=c(2,2),
+                     rm.phix=TRUE, verbose=TRUE, matchIDs=TRUE,
+                     compress=TRUE, multithread=TRUE) 
+# Check retained reads
+retained <- as.data.frame(out)
+retained$percentage_retained <- retained$reads.out/retained$reads.in*100
+View(retained)
+
+# Or check quality profile again
+plotQualityProfile(filtFs[1:4])
+plotQualityProfile(filtRs[1:4])
+
+# Samples with fewer than 1000 reads after filtering are dropped before error
+# learning. This is safer than filtering after DADA2 inference, because very
+# low-read samples can distort the error model.
+samples_to_keep_filter <- retained$reads.out >= 1000
+cat("Samples dropped at filter step:", sum(!samples_to_keep_filter), "\n")
+```
+
+# Error rate
+```{r learn_error}
+#Learn error rates
+errF <- learnErrors(filtFs[samples_to_keep_filter], multithread=TRUE)
+errR <- learnErrors(filtRs[samples_to_keep_filter], multithread=TRUE)
+
+#Plot error
+plotErrors(errF, nominalQ=TRUE)
+plotErrors(errR, nominalQ=TRUE)
+```
+
+# Dereplication
+```{r derep}
+derepFs <- derepFastq(filtFs[samples_to_keep_filter], verbose=TRUE)
+derepRs <- derepFastq(filtRs[samples_to_keep_filter], verbose=TRUE)
+
+# Name the derep-class objects by the sample names
+names(derepFs) <- sample.namesF[samples_to_keep_filter]
+names(derepRs) <- sample.namesR[samples_to_keep_filter]
+```
+
+# Sample inference
+```{r dada}
+#DADA2 infers sample sequences exactly and resolves differences of as little as 1 nucleotide
+dadaFs <- dada(derepFs, err=errF, multithread=TRUE)
+dadaRs <- dada(derepRs, err=errR, multithread=TRUE)
+
+#Inspecting the returned dada-class object:
+dadaFs[[1]]
+dadaRs[[1]]
+```
+
+#Remove low-sequence sample
+```{r, sample_filter}
+# After denoising, verify that all samples retained sufficient reads.
+# This tracks unique sequences at each stage as an additional check.
+getN <- function(x) sum(getUniques(x))
+
+track_pre <- cbind(
+  sapply(derepFs, getN),
+  sapply(derepRs, getN),
+  sapply(dadaFs,  getN),
+  sapply(dadaRs,  getN))
+
+colnames(track_pre) <- c("derepF", "derepR", "dadaF", "dadaR")
+rownames(track_pre) <- sample.namesF[samples_to_keep_filter]
+
+# We now use it only as a secondary check — primary filtering happened at filterAndTrim.
+samples_to_keep <- track_pre[, 4] > 100
+cat("Samples dropped at post-DADA2 check:", sum(!samples_to_keep), "\n")
+track_pre[, , drop = FALSE]
+```
+
+
+# Merging
+```{r merge}
+# Merge forward and reverse denoised reads to obtain full-length amplicon sequences.
+# Pairs must overlap by at least minOverlap bases with at most maxMismatch mismatches.
+
+# --- VERIFY OVERLAP GEOMETRY BEFORE RUNNING ---
+# Expected overlap = truncLenF + truncLenR - amplicon_length
+# For V3 (~253 bp):  220 + 200 - 253 = 167 bp — merging should work well.
+# If you change truncLen values, recalculate this before proceeding.
+# If overlap is <20 bp, merging will fail for most reads.
+
+
+# Merge forward and reverse reads to obtain the full denoised sequences
+# Skip this step if using fastq with only forward reads
+mergers <- mergePairs(
+  dadaFs[samples_to_keep],
+  derepFs[samples_to_keep],
+  dadaRs[samples_to_keep],
+  derepRs[samples_to_keep],
+  minOverlap = 20,    # minimum overlap in bp; default is 12, 20 is safer
+  maxMismatch = 0,    # no mismatches in the overlap region (default, keep this)
+  verbose = TRUE
+)
+
+
+# The mergers object is a list of data.frames from each sample. 
+# Each data.frame contains the merged $sequence, its $abundance, and the indices of the $forward and $reverse sequence variants that were merged. 
+
+# Inspect the merger data frame from the first sample
+# 'accept' column: TRUE means the pair was successfully merged
+head(mergers[[1]])
+```
+
+# Construct sequence table
+```{r seqtab}
+seqtab <- makeSequenceTable(mergers)
+
+#Check table dimension
+dim(seqtab)
+
+#Inspect districution of sequence lengths
+table(nchar(getSequences(seqtab)))
+
+# Inspect the distribution of merged sequence lengths
+# For V3, expect a tight peak around 253 bp
+# For V3-V4, expect a peak around 460 bp
+seq_length_dist <- table(nchar(getSequences(seqtab)))
+seq_length_dist
+
+#View Sequence Length Distribution Post-Merging
+#most useful with merged data. this plot will not show you much for forward reads only, which should have a uniform length distribution.
+length.histogram <- as.data.frame(seq_length_dist) #tabulate sequence length distribution
+plot(x=length.histogram[,1], y=length.histogram[,2],
+     xlab = "Sequence length (bp)", ylab = "Number of ASVs",
+     main = "Merged ASV length distribution") #view length distribution plot
+
+## If different datasets (fastq files from different studies) are used, 
+# the above pipeline need to be done for each dataset separatly
+# Then the seqtab can be merged with: 
+#seqtab <- mergeSequenceTables(tables = list(seqtab_1, seqtab_2, seqtab_3))
+
+# then the rest of the pipeline can be done on the merged seqtab
+```
+
+```{r seqtab_length_filter}
+# --- ADDED: amplicon length filter ---
+# Retain only sequences within the expected length range for your amplicon.
+# This removes off-target products (primer dimers, chimeric merges of wrong length)
+# that survived to this point.
+#
+# For V3 (341F/806R region, ~253 bp after primer removal):
+#   use seq(252, 255) as a generous window around the peak
+#   Adjust based on your length distribution plot above.
+#
+# For V3-V4 (341F/806R, ~460 bp):
+#   use seq(440, 480)
+
+seqtab <- seqtab[, nchar(colnames(seqtab)) %in% seq(250, 256)]
+cat("ASVs retained after length filter:", ncol(seqtab), "\n")
+```
+
+
+Comment: the removal low-read-count singleton ASVs step was deleted from this pipeline
+
+# Remove chimeras
+```{r}
+# Here we remove "bimeras" or chimeras with two sources
+# look at "method" to decide which type of pooling you'd like to use when judging each sequence as chimeric or non-chimeric
+# Possible methods: "consensus" ; "pooled"
+#this step can take a few minutes to a few hours, depending on the size of your datas
+seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE) 
+
+dim(seqtab.nochim)
+# Proportion of reads retained after chimera removal
+# Should typically be >90% — you may lose many ASVs but should lose few reads
+prop_retained <- sum(seqtab.nochim)/sum(seqtab)
+cat(sprintf("Proportion of reads retained after chimera removal: %.1f%%\n",
+            prop_retained * 100))
+```
+
+# Track reads
+```{r track_reads}
+# Look at the number of reads that made it through each step in the pipeline
+getN <- function(x) sum(getUniques(x))
+
+# IF ran the optional, run the following:
+track <- cbind(out[samples_to_keep_filter, ][samples_to_keep, ],
+               sapply(dadaFs[samples_to_keep], getN), 
+               sapply(dadaRs[samples_to_keep], getN), 
+               sapply(mergers, getN),
+               rowSums(seqtab.nochim))
+
+
+# If processing only a single sample, remove the sapply calls: e.g. replace sapply(dadaFs, getN) with getN(dadaFs)
+
+# Adding percent_chimeras in track
+track <- cbind(track, round(100-track[,6]/track[,5]*100,2))
+colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged",
+                     "nochimeras","percent_chimeras")
+
+
+rownames(track) <- sample.namesF[samples_to_keep_filter][samples_to_keep]
+
+# Save output from sequence table construction steps
+# Read retention table
+write.table(track, "Tables/read_retention_table_PROJECT_NAME.txt", quote=F, row.names=T, col.names=T, sep="\t")
+```
+
+# Assign taxonomy
+The SILVA v138.2 database is used in a **two-step approach**:
+
+1. `assignTaxonomy()` — assigns Kingdom through Genus using a naïve Bayesian classifier.
+2. `addSpecies()` — adds species-level assignments by exact-match to reference sequences.
+```{r}
+# Note: time consuming if you have a large dataset
+  # Saving the sequences as a fasta file (with writeFasta) and using QIIME's taxonomy assignment command will save you time
+  # Slightly less accurate than the dada2 package's taxonomy assignment function.
+# Using the Silva database
+
+# Silva database: https://benjjneb.github.io/dada2/training.html
+# download the silva_nr99_v138.2_toGenus_trainset.fa.gz
+# Assign to Genus
+taxa <- assignTaxonomy(seqtab.nochim, "db/silva_nr99_v138.2_toGenus_trainset.fa.gz", multithread=TRUE, tryRC = TRUE)
+
+# The dada2 package also implements a method to make species level assignments based on exact matching between ASVs and sequenced reference strains. Recent analysis suggests that exact matching (or 100% identity) is the only appropriate way to assign species to 16S gene fragments. Currently, species-assignment training fastas are available for the Silva and RDP 16S databases. To follow the optional species addition step, download the silva_v138.2_assignSpecies.fa.gz file, and place it in the directory with the fastq files. Using: 
+taxa <- addSpecies(taxa, "db/silva_v138.2_assignSpecies.fa.gz")
+
+
+# Label unassigned Kingdom-level ASVs
+# These may be eukaryotic, archaeal, or true unknowns
+NAs <- which(is.na(taxa[, 1]))
+taxa[NAs, 1] <- "Unassigned"
+cat("Unassigned at Kingdom level:", length(NAs), "\n")
+
+# Quick summary of assignment rates by rank
+cat("\nAssignment rate by rank:\n")
+for (i in 1:ncol(taxa)) {
+  assigned <- sum(!is.na(taxa[, i]))
+  cat(sprintf("  %s: %d / %d (%.1f%%)\n",
+              colnames(taxa)[i], assigned, nrow(taxa),
+              assigned / nrow(taxa) * 100))
+}
+```
+
+```{r export_tables}
+# Create output directory if it does not exist
+dir.create("Tables", showWarnings = FALSE)
+
+# --- Step 1: add ASV labels and sequence column to the taxonomy table ---
+# At this point taxa is a matrix (from assignTaxonomy / addSpecies).
+# We convert to data.frame temporarily to use dplyr::mutate.
+taxa <- taxa %>%
+  as.data.frame() %>%
+  mutate(ASV = paste0("ASV", seq(1, nrow(taxa))),  # short label: ASV1, ASV2, ...
+         SEQ = rownames(taxa))                       # full sequence retained here
+
+# Assign short ASV labels as row names
+rownames(taxa) <- taxa$ASV
+
+# Sanity check: confirm no duplicate ASV names were created
+stopifnot(sum(duplicated(rownames(taxa))) == 0)
+cat("No duplicate ASV names — OK\n")
+
+# --- Step 2: build the correspondence table ---
+# This maps ASV identifier <-> full sequence for future reference.
+# Keep this file alongside your results.
+correspondence <- taxa[, c("ASV", "SEQ")]
+write.table(correspondence,
+            "Tables/correspondence_table_PROJECT_NAME.txt",
+            sep = "\t", quote = FALSE, row.names = FALSE, col.names = TRUE)
+
+# --- Step 3: convert taxa back to a matrix and drop the helper columns ---
+# Columns 8 (ASV) and 9 (SEQ) are removed; ranks only remain.
+taxa <- as.matrix(taxa)
+taxa <- taxa[, -c(8:9)]
+
+# Save taxonomy table (rows = ASVs, columns = Kingdom through Species)
+write.table(taxa, "Tables/taxonomy_table_PROJECT_NAME.txt",
+            sep = "\t", quote = FALSE, row.names = TRUE, col.names = TRUE)
+
+# --- Step 4: build the abundance (OTU) table ---
+# seqtab.nochim has rows = samples, columns = sequences.
+# Transpose so rows = sequences (ASVs), then rename by position using correspondence.
+# Position-based renaming is safe: assignTaxonomy always returns rows in the same order as the input seqtab.nochim columns.
+otu <- t(seqtab.nochim)                       # rows = sequences, cols = samples
+rownames(otu) <- correspondence$ASV            # rename by position — safe, no string matching needed
+otu <- as.matrix(otu)
+class(otu) <- "numeric"
+
+# Save abundance table (rows = ASVs, columns = samples)
+write.table(otu, "Tables/abundance_table_PROJECT_NAME.txt",
+            sep = "\t", quote = FALSE, row.names = TRUE, col.names = TRUE)
+
+cat("Taxonomy table:    Tables/taxonomy_table_PROJECT_NAME.txt\n")
+cat("Abundance table:   Tables/abundance_table_PROJECT_NAME.txt\n")
+cat("Correspondence:    Tables/correspondence_table_PROJECT_NAME.txt\n")
+cat("ASVs exported:", nrow(otu), "\n")
+cat("Samples:      ", ncol(otu), "\n")
+```
